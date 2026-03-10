@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Angelo Ganno — Projects, experiments, and writing on privacy, technology, and the spaces between.">
+  <meta name="robots" content="index, follow">
+  <title>Projects &amp; Writing — Angelo Ganno</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__name">Angelo Ganno</a>
+      <div class="nav__right">
+        <a href="index.html" class="nav__link">← Home</a>
+        <a href="index.html#contact" class="nav__cta">Get in touch</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══ HERO ═══ -->
+  <header class="hero">
+    <div class="container">
+      <p class="hero__eyebrow">Projects &amp; Writing</p>
+      <h1 class="hero__headline">Things I'm building<br>&amp; thinking about.</h1>
+      <div class="hero__accent"></div>
+      <p class="hero__sub">
+        Vibe coding experiments and writing on privacy, technology, and the
+        spaces between.
+      </p>
+    </div>
+  </header>
+
+  <!-- ═══ WRITING / SUBSTACK ═══ -->
+  <section class="section section--alt">
+    <div class="container">
+      <h2 class="section__title">Latest Writing</h2>
+      <p class="section__sub">Essays and thoughts published on Substack.</p>
+
+      <!-- Always-visible Substack card -->
+      <div class="substack-card">
+        <div class="substack-card__text">
+          <h3>Read on Substack</h3>
+          <p>Privacy, data governance, and everything in between.</p>
+        </div>
+        <a
+          href="https://substack.com/@angeloeth"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="substack-card__link"
+        >
+          Open Substack →
+        </a>
+      </div>
+
+      <!-- Recent posts — populated by JS from RSS, hidden on failure -->
+      <div id="posts-list" class="posts-list" aria-live="polite">
+        <p class="posts-loading">Loading recent posts…</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ PROJECTS ═══ -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section__title">Projects</h2>
+      <p class="section__sub">Side projects built in public. More coming soon.</p>
+
+      <div class="projects-grid">
+
+        <!-- This very website -->
+        <div class="project-card">
+          <h3 class="project-card__title">This Website</h3>
+          <p class="project-card__desc">
+            A privacy-first personal site — no trackers, no analytics, no frameworks.
+            Pure HTML &amp; CSS, built with Claude.
+          </p>
+          <div class="tags">
+            <span class="tag">HTML</span>
+            <span class="tag">CSS</span>
+            <span class="tag">Vanilla JS</span>
+          </div>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="project-link"
+          >View source →</a>
+        </div>
+
+        <!-- Placeholder -->
+        <div class="project-card project-card--placeholder">
+          <h3 class="project-card__title">Next project</h3>
+          <p class="project-card__desc">Something's brewing.</p>
+          <p class="project-card__coming">Coming soon</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CTA ═══ -->
+  <section class="cta">
+    <div class="container">
+      <h2 class="cta__title">Let's Work Together</h2>
+      <p class="cta__body">
+        Whether you're navigating a compliance audit, building a privacy program from scratch,
+        or simply need expert guidance — I'd love to connect.
+      </p>
+      <a class="cta__btn" id="cta-email" href="#">Send me an email</a>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <p>© Angelo Ganno</p>
+      <p><a href="index.html">Resume</a></p>
+      <p class="footer__note">No trackers. No analytics. Just a website.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Email CTA
+    document.getElementById('cta-email').addEventListener('click', function (e) {
+      e.preventDefault();
+      window.location.href = 'mailto:' + ['angleog.3k6tt', '@', 'passmail.net'].join('');
+    });
+
+    // Substack RSS fetch — graceful fallback if CORS/network fails
+    (async function loadSubstackPosts() {
+      const container = document.getElementById('posts-list');
+      if (!container) return;
+
+      try {
+        const feedUrl = 'https://angeloeth.substack.com/feed';
+        const res = await fetch(feedUrl);
+        if (!res.ok) throw new Error('Feed unavailable');
+
+        const xml  = await res.text();
+        const doc  = new DOMParser().parseFromString(xml, 'text/xml');
+        const items = Array.from(doc.querySelectorAll('item')).slice(0, 4);
+
+        if (items.length === 0) throw new Error('No items');
+
+        container.innerHTML = items.map(item => {
+          const rawTitle = item.querySelector('title')?.textContent ?? 'Untitled';
+          const link     = item.querySelector('link')?.textContent?.trim() ?? '#';
+          const pubDate  = item.querySelector('pubDate')?.textContent ?? '';
+          const title    = rawTitle.replace(/<!\[CDATA\[|\]\]>/g, '').trim();
+          const date     = pubDate
+            ? new Date(pubDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric',
+              })
+            : '';
+
+          return `
+            <a href="${link}" target="_blank" rel="noopener noreferrer" class="post-item">
+              <div>
+                <div class="post-item__title">${title}</div>
+                ${date ? `<div class="post-item__date">${date}</div>` : ''}
+              </div>
+              <span class="post-item__arrow">→</span>
+            </a>
+          `;
+        }).join('');
+
+      } catch (_) {
+        // No posts loaded — remove loading indicator, Substack card above remains
+        container.remove();
+      }
+    })();
+  </script>
+
+</body>
+</html>
